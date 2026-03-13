@@ -138,8 +138,7 @@ MainWindow::MainWindow(QWidget *parent)
     linksList = new QComboBox();
 
     linksList->setFixedWidth(300);
-    linksList->addItem("Link_1");
-    linksList->addItem("Link_2");
+    linksList->setDisabled(true);
 
     connect(linksList, &QComboBox::currentIndexChanged, this,
             &MainWindow::selectedLinkChanged);
@@ -153,6 +152,7 @@ MainWindow::MainWindow(QWidget *parent)
     formLayout->addRow(QString("Link Status:"), linkStatus);
 
     tableView->setModel(&model);
+    tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addLayout(formLayout);
@@ -253,7 +253,8 @@ void MainWindow::parseServerData() {
             QString nameValue = deviceLinkObject.value("name").toString();
             deviceLink.name   = nameValue;
 
-            linksList->setItemText(i, nameValue);
+            linksList->setItemText(i,
+                                   QString("%1  %2").arg(tkValue, nameValue));
 
             if (!deviceLinkObject.value("enabled").isBool()) {
                 this->error = true;
@@ -384,7 +385,7 @@ void MainWindow::parseServerData() {
 
                 } else if (tagValueObject.value("Int").isDouble()) {
 
-                    int tagIntValue = tagValueObject.value("Real").toInt();
+                    int tagIntValue = tagValueObject.value("Int").toInt();
                     deviceLink.tags[tag_index].value.type      = ST_INT_VALUE;
                     deviceLink.tags[tag_index].value.int_value = tagIntValue;
 
@@ -531,7 +532,7 @@ void MainWindow::parseServerData() {
 }
 
 void MainWindow::updateView() {
-    size_t arrayLen = this->linksBuffer.size();
+    size_t arrayLen = this->numLinks;
 
     if (this->selectedLinkIndex > arrayLen - 1) {
         this->error       = true;
@@ -555,4 +556,22 @@ void MainWindow::updateView() {
     this->linkStatus->setText(selectedLink.status);
     this->model.setTableData(&selectedLink);
     this->tableView->setDisabled(false);
+    for (size_t i = 0; i < N_CHANNELS; i++) {
+        this->tableView->setRowHeight(i, 7);
+    }
+
+    if (this->linksList->count() == 0) {
+        for (size_t i = 0; i < arrayLen; i++) {
+            this->linksList->addItem(QString("%1    %2")
+                                         .arg(this->linksBuffer[i].tk)
+                                         .arg(this->linksBuffer[i].name));
+        }
+    }
+    for (size_t i = 0; i < arrayLen; i++) {
+        this->linksList->setItemText(i, QString("%1    %2")
+                                            .arg(this->linksBuffer[i].tk)
+                                            .arg(this->linksBuffer[i].name));
+    }
+
+    this->linksList->setDisabled(false);
 }
