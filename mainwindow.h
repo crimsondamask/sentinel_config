@@ -124,6 +124,7 @@ class MainWindow : public QMainWindow {
     void    parseServerData();
     void    selectedLinkChanged();
     void    updateView();
+    void    httpErrorOccurred();
     bool    isError();
     QString errorString();
 

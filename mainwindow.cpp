@@ -131,6 +131,7 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("Sentinel Monitor V0.0.1");
 
     connect(pollTimer, &QTimer::timeout, this, &MainWindow::initRequest);
+
     pollTimer->start(1000);
     // Repeating timer
     pollTimer->setSingleShot(false);
@@ -182,6 +183,16 @@ void    MainWindow::initRequest() {
 }
 
 void MainWindow::parseServerData() {
+
+    if (reply->error() != QNetworkReply::NoError) {
+        this->error = true;
+        this->serverError =
+            QString("Error connecting to server. %1").arg(reply->errorString());
+        this->statusLabel->setText(this->serverError);
+        this->tableView->setDisabled(true);
+        return;
+    }
+
     QByteArray      readData = reply->readAll();
     QJsonParseError jsonError;
     QJsonDocument   doc = QJsonDocument::fromJson(readData, &jsonError);
@@ -543,4 +554,5 @@ void MainWindow::updateView() {
                                         selectedLink.protocolDetails));
     this->linkStatus->setText(selectedLink.status);
     this->model.setTableData(&selectedLink);
+    this->tableView->setDisabled(false);
 }
